@@ -2,3 +2,6 @@ requests==2.31.0
 beautifulsoup4==4.12.2
 python-docx==0.8.11
 reportlab==4.0.4
+python-dotenv==1.0.0
+google-api-python-client==2.104.0
+oauth2client==4.1.3
