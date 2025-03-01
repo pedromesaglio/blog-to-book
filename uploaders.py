@@ -1,75 +1,63 @@
-"""
-Módulo para subir archivos a servicios en la nube.
-"""
 import os
 import logging
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
-from typing import Optional
+import requests
+from typing import Optional, Dict
+from config import UPLOAD_SERVICES
 
 logger = logging.getLogger(__name__)
 
 class GoogleDriveUploader:
-    """Sube archivos a Google Drive."""
-    
-    def __init__(self, client_id: str, client_secret: str, refresh_token: str):
+    def __init__(self, config: Dict):
         self.credentials = Credentials(
             token=None,
-            refresh_token=refresh_token,
-            token_uri="https://oauth2.googleapis.com/token",
-            client_id=client_id,
-            client_secret=client_secret
+            refresh_token=config['refresh_token'],
+            client_id=config['client_id'],
+            client_secret=config['client_secret'],
+            token_uri="https://oauth2.googleapis.com/token"
         )
-        self.service = build("drive", "v3", credentials=self.credentials)
+        self.service = build('drive', 'v3', credentials=self.credentials)
+        self.folder_id = config.get('folder_id')
     
-    def upload(self, file_path: str, folder_id: Optional[str] = None) -> str:
-        """Sube un archivo a Google Drive y retorna el enlace público."""
-        file_name = os.path.basename(file_path)
-        media = MediaFileUpload(file_path, resumable=True)
-        
-        file_metadata = {
-            "name": file_name,
-            "parents": [folder_id] if folder_id else []
-        }
-        
+    def upload(self, file_path: str) -> str:
         try:
+            file_metadata = {'name': os.path.basename(file_path)}
+            if self.folder_id:
+                file_metadata['parents'] = [self.folder_id]
+                
+            media = MediaFileUpload(file_path)
             file = self.service.files().create(
                 body=file_metadata,
                 media_body=media,
-                fields="id, webViewLink"
+                fields='webViewLink'
             ).execute()
             
-            logger.info(f"Archivo subido a Google Drive: {file['webViewLink']}")
-            return file["webViewLink"]
+            logger.info(f"✅ Uploaded to Google Drive: {file['webViewLink']}")
+            return file['webViewLink']
         except Exception as e:
-            logger.error(f"Error al subir a Google Drive: {e}")
+            logger.error(f"🚨 Google Drive upload failed: {str(e)}")
             raise
 
 class HttpUploader:
-    """Sube archivos a un servidor vía HTTP POST (ejemplo genérico)."""
-    
-    def __init__(self, api_url: str, api_key: str):
-        self.api_url = api_url
-        self.api_key = api_key
+    def __init__(self, config: Dict):
+        self.api_url = config['api_url']
+        self.api_key = config['api_key']
     
     def upload(self, file_path: str) -> str:
-        """Sube un archivo a un servidor remoto."""
         try:
-            with open(file_path, "rb") as file:
-                files = {"file": (os.path.basename(file_path), file)}
-                headers = {"Authorization": f"Bearer {self.api_key}"}
-                
+            with open(file_path, 'rb') as f:
+                files = {'file': (os.path.basename(file_path), f)}
+                headers = {'Authorization': f"Bearer {self.api_key}"}
                 response = requests.post(
                     self.api_url,
                     files=files,
                     headers=headers,
                     timeout=30
                 )
-                
             response.raise_for_status()
-            logger.info(f"Archivo subido exitosamente: {response.json()}")
-            return response.json()["url"]
+            return response.json()['url']
         except Exception as e:
-            logger.error(f"Error en subida HTTP: {e}")
+            logger.error(f"HTTP upload failed: {str(e)}")
             raise

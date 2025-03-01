@@ -1,54 +1,59 @@
-"""
-Punto de entrada principal del programa.
-"""
 import argparse
 import logging
+from dotenv import load_dotenv
 from scraper import BlogScraper
 from generators import DocxGenerator, PdfGenerator
-from config import OUTPUT_FILENAME
+from uploaders import GoogleDriveUploader, HttpUploader
+from config import UPLOAD_SERVICES, OUTPUT_FILENAME
+
+load_dotenv()
 
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[logging.StreamHandler()]
 )
 
-def main(output_format: str, filename: str):
-    # 1. Extraer artículos
-    scraper = BlogScraper()
-    articles = []
-    for link in scraper.get_article_links():
-        if article := scraper.extract_article(link):
-            articles.append(article)
-    logging.info(f"Artículos extraídos: {len(articles)}")
-    
-    # 2. Generar libro
-    if output_format == "docx":
-        generator = DocxGenerator(articles, f"{filename}.docx")
-    elif output_format == "pdf":
-        generator = PdfGenerator(articles, f"{filename}.pdf")
-    else:
-        raise ValueError("Formato no soportado")
-    
-    generator.generate()
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Convertir blog a libro")
-    parser.add_argument(
-        "--format",
-        type=str,
-        default="docx",
-        choices=["docx", "pdf"],
-        help="Formato de salida"
-    )
-    parser.add_argument(
-        "--output",
-        type=str,
-        default=OUTPUT_FILENAME,
-        help="Nombre del archivo de salida (sin extensión)"
-    )
+def main():
+    parser = argparse.ArgumentParser(description='📚 Blog to Book Converter')
+    parser.add_argument('--format', '-f', choices=['docx', 'pdf'], default='docx')
+    parser.add_argument('--output', '-o', default=OUTPUT_FILENAME)
+    parser.add_argument('--upload', '-u', choices=['google-drive', 'http'])
     args = parser.parse_args()
     
     try:
-        main(args.format, args.output)
+        # 1. Scrape content
+        scraper = BlogScraper()
+        articles = [art for art in (
+            scraper.extract_article(url) 
+            for url in scraper.get_article_links()
+        ) if art]
+        
+        # 2. Generate book
+        ext = args.format
+        filename = f"{args.output}.{ext}"
+        
+        if ext == 'docx':
+            generator = DocxGenerator(articles, filename)
+        else:
+            generator = PdfGenerator(articles, filename)
+            
+        generator.generate()
+        
+        # 3. Upload
+        if args.upload:
+            service_config = UPLOAD_SERVICES[args.upload]
+            if args.upload == 'google-drive':
+                uploader = GoogleDriveUploader(service_config)
+            else:
+                uploader = HttpUploader(service_config)
+                
+            link = uploader.upload(filename)
+            logging.info(f"🔗 Access your book here: {link}")
+            
     except Exception as e:
-        logging.error(f"Error en ejecución: {e}", exc_info=True)
+        logging.error(f"💥 Critical error: {str(e)}", exc_info=True)
+        exit(1)
+
+if __name__ == '__main__':
+    main()
