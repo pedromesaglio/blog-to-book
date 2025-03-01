@@ -1,59 +1,56 @@
 import argparse
 import logging
-from dotenv import load_dotenv
 from scraper import BlogScraper
-from generators import DocxGenerator, PdfGenerator
-from uploaders import GoogleDriveUploader, HttpUploader
-from config import UPLOAD_SERVICES, OUTPUT_FILENAME
+from generators import PDFGenerator, DOCXGenerator
 
-load_dotenv()
-
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[logging.StreamHandler()]
-)
+def setup_logging():
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        handlers=[
+            logging.FileHandler("blog_to_book.log"),
+            logging.StreamHandler()
+        ]
+    )
 
 def main():
-    parser = argparse.ArgumentParser(description='📚 Blog to Book Converter')
-    parser.add_argument('--format', '-f', choices=['docx', 'pdf'], default='docx')
-    parser.add_argument('--output', '-o', default=OUTPUT_FILENAME)
-    parser.add_argument('--upload', '-u', choices=['google-drive', 'http'])
+    setup_logging()
+    logger = logging.getLogger(__name__)
+    
+    parser = argparse.ArgumentParser(description="📘 Conversor de Blog a Libro")
+    parser.add_argument("-f", "--format", choices=["pdf", "docx"], default="pdf")
+    parser.add_argument("-o", "--output", default="blog_book")
     args = parser.parse_args()
     
     try:
-        # 1. Scrape content
+        logger.info("🚀 Iniciando proceso...")
         scraper = BlogScraper()
-        articles = [art for art in (
-            scraper.extract_article(url) 
-            for url in scraper.get_article_links()
-        ) if art]
         
-        # 2. Generate book
-        ext = args.format
-        filename = f"{args.output}.{ext}"
+        # Paso 1: Obtener todos los enlaces
+        logger.info("🔍 Buscando artículos...")
+        urls = scraper.get_all_article_links()
+        logger.info(f"📚 Artículos encontrados: {len(urls)}")
         
-        if ext == 'docx':
-            generator = DocxGenerator(articles, filename)
-        else:
-            generator = PdfGenerator(articles, filename)
-            
+        # Paso 2: Extraer contenido
+        logger.info("⚙️ Procesando artículos...")
+        articles = scraper.extract_articles(urls)
+        logger.info(f"✅ Artículos válidos: {len(articles)}")
+        
+        if not articles:
+            logger.error("❌ No se encontró contenido válido")
+            return
+        
+        # Paso 3: Generar libro
+        logger.info(f"🖨️ Generando {args.format.upper()}...")
+        filename = f"{args.output}.{args.format}"
+        
+        generator = PDFGenerator(articles, filename) if args.format == "pdf" else DOCXGenerator(articles, filename)
         generator.generate()
         
-        # 3. Upload
-        if args.upload:
-            service_config = UPLOAD_SERVICES[args.upload]
-            if args.upload == 'google-drive':
-                uploader = GoogleDriveUploader(service_config)
-            else:
-                uploader = HttpUploader(service_config)
-                
-            link = uploader.upload(filename)
-            logging.info(f"🔗 Access your book here: {link}")
-            
+        logger.info(f"🎉 Libro generado: {filename}")
+    
     except Exception as e:
-        logging.error(f"💥 Critical error: {str(e)}", exc_info=True)
-        exit(1)
+        logger.error(f"💥 Error crítico: {str(e)}", exc_info=True)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

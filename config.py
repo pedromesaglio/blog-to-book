@@ -1,35 +1,25 @@
-import os
-
 # Configuración del Blog
 BASE_URL = "https://cultivoloco.com.ar/"
 OUTPUT_FILENAME = "blog_book"
+MAX_WORKERS = 10  # Hilos para procesamiento paralelo
+REQUEST_TIMEOUT = 25  # Segundos
 
-# Selectores CSS (¡AJUSTAR!)
+# Selectores CSS (¡Ajustar según tu blog!)
 SELECTORS = {
-    "article_links": "a.post-link",
-    "title": "h1.entry-title",
-    "content": "div.post-content",
-    "date": "time.post-date"
+    "article_links": "a.post-link",        # Enlaces a artículos
+    "title": "h1.post-title",              # Título del artículo
+    "content": "div.post-content",         # Contenido principal
+    "date": "time.post-date",              # Fecha de publicación
+    "next_page": "a.next"                  # Selector de paginación
 }
 
 # Configuración PDF
 PDF_CONFIG = {
-    "font_size": 12,
+    "page_size": "A4",
+    "font_size": 11,
+    "title_size": 18,
+    "margin": 45,
+    "line_height": 15,
     "font_bold": "Helvetica-Bold",
-    "font_regular": "Helvetica",
-    "page_size": "letter"
-}
-
-# Configuración de Subida
-UPLOAD_SERVICES = {
-    "google-drive": {
-        "client_id": os.getenv("GDRIVE_CLIENT_ID"),
-        "client_secret": os.getenv("GDRIVE_CLIENT_SECRET"),
-        "refresh_token": os.getenv("GDRIVE_REFRESH_TOKEN"),
-        "folder_id": os.getenv("GDRIVE_FOLDER_ID", None)
-    },
-    "http": {
-        "api_url": os.getenv("HTTP_UPLOAD_URL"),
-        "api_key": os.getenv("HTTP_UPLOAD_KEY")
-    }
+    "font_regular": "Helvetica"
 }
