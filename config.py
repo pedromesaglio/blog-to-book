@@ -1,25 +1,21 @@
-# Configuración del Blog
 BASE_URL = "https://cultivoloco.com.ar/"
-OUTPUT_FILENAME = "blog_book"
-MAX_WORKERS = 10  # Hilos para procesamiento paralelo
-REQUEST_TIMEOUT = 25  # Segundos
+OUTPUT_FILENAME = "libro_blog"
 
-# Selectores CSS (¡Ajustar según tu blog!)
+# Selectores CSS (¡AJUSTAR ESTOS SEGÚN TU BLOG!)
 SELECTORS = {
-    "article_links": "a.post-link",        # Enlaces a artículos
-    "title": "h1.post-title",              # Título del artículo
-    "content": "div.post-content",         # Contenido principal
-    "date": "time.post-date",              # Fecha de publicación
-    "next_page": "a.next"                  # Selector de paginación
+    "article_links": "a.entry-title",        # Enlaces a artículos
+    "title": "h1.entry-title",               # Título del artículo
+    "content": "div.entry-content",          # Contenido principal
+    "date": "time.entry-date",               # Fecha de publicación
+    "next_page": "nav.pagination a.next"     # Paginación (WordPress común)
 }
 
-# Configuración PDF
 PDF_CONFIG = {
     "page_size": "A4",
-    "font_size": 11,
+    "font_size": 12,
     "title_size": 18,
-    "margin": 45,
-    "line_height": 15,
+    "margin": 40,
+    "line_height": 14,
     "font_bold": "Helvetica-Bold",
     "font_regular": "Helvetica"
 }

@@ -36,14 +36,13 @@ class PDFGenerator:
             y_position -= self.cfg["line_height"] + 5
         
         # Fecha
-        y_position -= 15
         c.setFont(self.cfg["font_regular"], 10)
-        c.drawString(margin, y_position, f"Publicado el: {article['date']}")
-        y_position -= 25
+        c.drawString(margin, y_position - 15, f"Publicado el: {article['date']}")
+        y_position -= 30
         
         # Contenido
         c.setFont(self.cfg["font_regular"], self.cfg["font_size"])
-        content_lines = self._wrap_text(article["content"], 100)
+        content_lines = self._wrap_text(article["content"], 90)
         for line in content_lines:
             y_position = self._check_page(c, y_position, margin)
             c.drawString(margin, y_position, line)
