@@ -2,13 +2,15 @@
 BASE_URL = "https://cultivoloco.com.ar/"
 OUTPUT_FILENAME = "libro_blog"
 
-# Selectores CSS Validados para WordPress
 SELECTORS = {
-    "article_links": "article a[rel='bookmark']",  # Enlaces a artículos
-    "title": "h1.entry-title",                     # Título 
-    "content": "div.entry-content",                # Contenido
-    "date": "time.entry-date",                     # Fecha
-    "next_page": "a.next.page-numbers"             # Paginación
+    "article_links": "article.latest-posts-list h4 a",
+    "title": "h4 a", 
+    "content": "div.post-description",
+    
+    # Selector de fecha mejorado (solo para artículos):
+    "date": "article.latest-posts-list span.item-metadata.posts-date a",
+    
+    "next_page": "a.next.page-numbers"
 }
 
 # Configuración PDF
