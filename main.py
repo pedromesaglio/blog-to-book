@@ -3,51 +3,42 @@ import logging
 from scraper import BlogScraper
 from generators import PDFGenerator, DOCXGenerator
 
-def setup_logging():
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        handlers=[
-            logging.FileHandler("blog_to_book.log"),
-            logging.StreamHandler()
-        ]
-    )
-
 def main():
-    setup_logging()
-    logger = logging.getLogger(__name__)
-    
-    parser = argparse.ArgumentParser(description="📘 Conversor de Blog a Libro")
+    parser = argparse.ArgumentParser(description="📚 Blog to Book Converter")
     parser.add_argument("-f", "--format", choices=["pdf", "docx"], default="pdf")
-    parser.add_argument("-o", "--output", default="blog_book")
+    parser.add_argument("-o", "--output", default="libro_blog")
+    parser.add_argument("--loglevel", default="INFO", choices=["DEBUG", "INFO"])
+    
     args = parser.parse_args()
     
+    logging.basicConfig(
+        level=args.loglevel,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
+    
+    logger = logging.getLogger(__name__)
+    
     try:
-        logger.info("🚀 Iniciando proceso...")
+        logger.info("🚀 Iniciando scraper...")
         scraper = BlogScraper()
         
-        # Paso 1: Obtener todos los enlaces
         logger.info("🔍 Buscando artículos...")
         urls = scraper.get_all_article_links()
-        logger.info(f"📚 Artículos encontrados: {len(urls)}")
+        logger.info(f"✅ Encontrados: {len(urls)} URLs")
         
-        # Paso 2: Extraer contenido
-        logger.info("⚙️ Procesando artículos...")
+        logger.info("⚙️ Procesando contenido...")
         articles = scraper.extract_articles(urls)
-        logger.info(f"✅ Artículos válidos: {len(articles)}")
+        logger.info(f"📚 Artículos válidos: {len(articles)}")
         
         if not articles:
-            logger.error("❌ No se encontró contenido válido")
+            logger.error("❌ No hay contenido para generar")
             return
         
-        # Paso 3: Generar libro
         logger.info(f"🖨️ Generando {args.format.upper()}...")
-        filename = f"{args.output}.{args.format}"
-        
-        generator = PDFGenerator(articles, filename) if args.format == "pdf" else DOCXGenerator(articles, filename)
+        generator = PDFGenerator(articles, f"{args.output}.pdf") if args.format == "pdf" else DOCXGenerator(articles, f"{args.output}.docx")
         generator.generate()
         
-        logger.info(f"🎉 Libro generado: {filename}")
+        logger.info(f"🎉 ¡Libro generado! Guardado como: {args.output}.{args.format}")
     
     except Exception as e:
         logger.error(f"💥 Error crítico: {str(e)}", exc_info=True)
