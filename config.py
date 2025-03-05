@@ -1,25 +1,60 @@
-# Configuración Principal
+# Configuración principal
 BASE_URL = "https://cultivoloco.com.ar/"
 OUTPUT_FILENAME = "libro_blog"
+MAX_PAGES = 20  # Límite máximo de páginas a scrapear
 
 SELECTORS = {
-    "article_links": "article.latest-posts-list h4 a",
-    "title": "h4 a", 
-    "content": "div.post-description",
+    # Selectores para listado de artículos
+    "article_links": [
+        "article.post-item h2 a",
+        "article.latest-posts-list h4 a"
+    ],
     
-    # Selector de fecha mejorado (solo para artículos):
-    "date": "article.latest-posts-list span.item-metadata.posts-date a",
+    # Selectores dentro de cada artículo
+    "title": [
+        "h1.entry-title",
+        "h1.single-title",
+        "h1"
+    ],
+    "content": [
+        "div.entry-content",
+        "div.post-content",
+        "div.post-description"
+    ],
+    "date": [
+        "time.entry-date[datetime]",
+        "span.post-date",
+        "span.item-metadata.posts-date a"
+    ],
     
-    "next_page": "a.next.page-numbers"
+    # Selectores de paginación
+    "next_page": [
+        "a.next.page-numbers",
+        "li.next a"
+    ]
 }
 
 # Configuración PDF
 PDF_CONFIG = {
-    "page_size": "A4",
-    "font_size": 12,
-    "title_size": 18,
-    "margin": 40,
-    "line_height": 14,
-    "font_bold": "Helvetica-Bold",
-    "font_regular": "Helvetica"
+    "page": {
+        "size": "A4",
+        "margin": {
+            "top": 40,
+            "bottom": 40,
+            "left": 30,
+            "right": 30
+        }
+    },
+    "fonts": {
+        "regular": "Helvetica",
+        "bold": "Helvetica-Bold",
+        "sizes": {
+            "title": 18,
+            "body": 12
+        }
+    },
+    "styles": {
+        "line_height": 1.2,
+        "paragraph_spacing": 8
+    }
 }
