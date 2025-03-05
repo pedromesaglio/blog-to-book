@@ -34,7 +34,7 @@ SELECTORS = {
     ]
 }
 
-# Configuración PDF
+# Configuración PDF (estructura original mejorada)
 PDF_CONFIG = {
     "page": {
         "size": "A4",
@@ -56,5 +56,7 @@ PDF_CONFIG = {
     "styles": {
         "line_height": 1.2,
         "paragraph_spacing": 8
-    }
+    },
+    # Nueva clave para acceso directo
+    "page_size": "A4"  
 }

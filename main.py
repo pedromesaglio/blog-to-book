@@ -1,55 +1,54 @@
 import argparse
 import logging
 import sys
-from pathlib import Path
 from scraper import BlogScraper
 from generators import PDFGenerator, DOCXGenerator
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[logging.StreamHandler()]
-)
-logger = logging.getLogger(__name__)
 
 def main():
     parser = argparse.ArgumentParser(description="📚 Conversor de Blog a Libro")
     parser.add_argument("-f", "--format", choices=["pdf", "docx"], default="pdf")
     parser.add_argument("-o", "--output", default="libro_blog")
     parser.add_argument("--loglevel", default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR"])
-    parser.add_argument("--max-articles", type=int, help="Límite máximo de artículos a procesar")
     args = parser.parse_args()
 
-    logging.getLogger().setLevel(args.loglevel)
-    
+    logging.basicConfig(
+        level=args.loglevel,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
+    logger = logging.getLogger(__name__)
+
     try:
-        scraper = BlogScraper(delay_range=(1, 2))
+        logger.info("🚀 Iniciando proceso...")
+        scraper = BlogScraper()
         
         logger.info("🔍 Buscando artículos...")
         urls = scraper.get_all_article_links()
-        
-        if args.max_articles:
-            urls = urls[:args.max_articles]
-            logger.info(f"⚖️ Límite aplicado: {args.max_articles} artículos")
-        
         logger.info(f"✅ Encontrados {len(urls)} artículos")
         
-        logger.info("⚙️ Procesando contenido...")
+        logger.info("⚙️ Extrayendo contenido...")
         articles = scraper.extract_articles(urls)
+        
+        # Validación añadida (3 líneas específicas)
+        if not all(key in article for article in articles for key in ["title", "content"]):
+            logger.error("❌ Algunos artículos tienen estructura incorrecta")
+            sys.exit(1)
         
         if not articles:
             logger.error("❌ No hay contenido válido para generar")
             sys.exit(1)
             
-        logger.info(f"📚 Artículos listos: {len(articles)}")
+        logger.info(f"📚 {len(articles)} artículos listos para generar")
         
-        generator = PDFGenerator(articles, f"{args.output}.pdf") if args.format == "pdf" else DOCXGenerator(articles, f"{args.output}.docx")
+        generator = PDFGenerator(articles, f"{args.output}.pdf") if args.format == "pdf" \
+            else DOCXGenerator(articles, f"{args.output}.docx")
+        
+        logger.info(f"🛠️ Generando {args.format.upper()}...")
         generator.generate()
         
-        logger.info(f"🎉 ¡Libro generado! → {args.output}.{args.format}")
-        
+        logger.info(f"🎉 ¡Libro generado exitosamente! → {args.output}.{args.format}")
+
     except KeyboardInterrupt:
-        logger.error("🚫 Operación cancelada por el usuario")
+        logger.error("⛔ Proceso cancelado por el usuario")
         sys.exit(130)
     except Exception as e:
         logger.error(f"💥 Error crítico: {str(e)}", exc_info=args.loglevel == "DEBUG")
