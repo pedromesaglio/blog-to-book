@@ -1,44 +1,39 @@
-# Configuración principal
 BASE_URL = "https://cultivoloco.com.ar/"
-OUTPUT_FILENAME = "libro_blog"
-MAX_PAGES = 20  # Límite máximo de páginas a scrapear
+OUTPUT_FILENAME = "cultivoloco_ebook"
+MAX_PAGES = 20
+REQUEST_DELAY = (1, 3)
+MAX_RETRIES = 3
 
 SELECTORS = {
-    # Selectores para listado de artículos
     "article_links": [
-        "article.post-item h2 a",
-        "article.latest-posts-list h4 a"
+        "article.post h2 a",
+        "article.latest-post a.entry-title"
     ],
-    
-    # Selectores dentro de cada artículo
     "title": [
         "h1.entry-title",
-        "h1.single-title",
+        "h1.post-title",
         "h1"
     ],
     "content": [
         "div.entry-content",
         "div.post-content",
-        "div.post-description"
+        "article.post"
     ],
     "date": [
         "time.entry-date[datetime]",
         "span.post-date",
-        "span.item-metadata.posts-date a"
+        "div.post-meta time"
     ],
-    
-    # Selectores de paginación
     "next_page": [
         "a.next.page-numbers",
-        "li.next a"
+        "li.pagination-next a"
     ]
 }
 
-# Configuración PDF
 PDF_CONFIG = {
     "page": {
         "size": "A4",
-        "margin": {
+        "margins": {
             "top": 40,
             "bottom": 40,
             "left": 30,
@@ -49,12 +44,13 @@ PDF_CONFIG = {
         "regular": "Helvetica",
         "bold": "Helvetica-Bold",
         "sizes": {
-            "title": 18,
+            "title": 20,
+            "subtitle": 14,
             "body": 12
         }
     },
     "styles": {
-        "line_height": 1.2,
-        "paragraph_spacing": 8
+        "line_height": 1.25,
+        "paragraph_spacing": 15
     }
 }
