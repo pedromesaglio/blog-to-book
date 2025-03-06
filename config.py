@@ -1,40 +1,31 @@
-# Configuración principal
+# Configuración mejorada para diseño profesional
 BASE_URL = "https://cultivoloco.com.ar/"
 OUTPUT_FILENAME = "libro_blog"
-MAX_PAGES = 20  # Límite máximo de páginas a scrapear
+MAX_PAGES = 20
 
 SELECTORS = {
-    # Selectores para listado de artículos
     "article_links": [
         "article.post-item h2 a",
         "article.latest-posts-list h4 a"
     ],
-    
-    # Selectores dentro de cada artículo
     "title": [
         "h1.entry-title",
-        "h1.single-title",
-        "h1"
+        "h1.single-title"
     ],
     "content": [
         "div.entry-content",
-        "div.post-content",
-        "div.post-description"
+        "div.post-content"
     ],
     "date": [
         "time.entry-date[datetime]",
-        "span.post-date",
-        "span.item-metadata.posts-date a"
+        "span.post-date"
     ],
-    
-    # Selectores de paginación
     "next_page": [
         "a.next.page-numbers",
         "li.next a"
     ]
 }
 
-# Configuración PDF (estructura original mejorada)
 PDF_CONFIG = {
     "page": {
         "size": "A4",
@@ -48,15 +39,29 @@ PDF_CONFIG = {
     "fonts": {
         "regular": "Helvetica",
         "bold": "Helvetica-Bold",
+        "italic": "Helvetica-Oblique",
         "sizes": {
-            "title": 18,
-            "body": 12
+            "title": 20,
+            "subtitle": 14,
+            "body": 11,
+            "header": 9,
+            "footer": 8
         }
     },
-    "styles": {
-        "line_height": 1.2,
-        "paragraph_spacing": 8
+    "colors": {
+        "primary": "#2E5BFF",
+        "secondary": "#4A4A4A",
+        "accent": "#F5F6F7",
+        "text": "#2D3A4B"
     },
-    # Nueva clave para acceso directo
-    "page_size": "A4"  
+    "styles": {
+        "line_height": 1.5,
+        "paragraph_spacing": 12,
+        "header_height": 25,
+        "footer_height": 15
+    },
+    "branding": {
+        "logo_path": "logo.png",
+        "website": "cultivoloco.com.ar"
+    }
 }

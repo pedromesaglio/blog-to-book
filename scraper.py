@@ -1,13 +1,13 @@
 import requests
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin
 import logging
 import time
 import random
 from typing import List, Dict, Optional
 from config import BASE_URL, SELECTORS, MAX_PAGES
 from database import DatabaseManager
-import dateparser  # Nuevo import
+import dateparser
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,6 @@ class BlogScraper:
             if not soup:
                 break
             
-            # Extraer enlaces
             page_links = []
             for selector in SELECTORS["article_links"]:
                 links = [urljoin(current_url, a['href']) 
@@ -49,19 +48,14 @@ class BlogScraper:
                     page_links = links
                     break
             
-            # Filtrar duplicados y aplicar límite
             new_links = [link for link in page_links if link not in all_links]
             if max_articles:
-                remaining = max_articles - len(all_links)
-                new_links = new_links[:remaining]
+                new_links = new_links[:max_articles - len(all_links)]
             
             all_links.extend(new_links)
-            
-            # Verificar límite
             if max_articles and len(all_links) >= max_articles:
                 break
                 
-            # Paginación
             next_page = self._get_next_page(soup, current_url)
             if not next_page or next_page == current_url:
                 break
@@ -103,22 +97,19 @@ class BlogScraper:
             date_str = ""
             for selector in SELECTORS["date"]:
                 if element := soup.select_one(selector):
-                    date_str = element.text.strip()
+                    date_str = element.get('datetime') or element.text.strip()
                     break
             
-            # Parseo mejorado de fecha
-            parsed_date = None
-            if date_str:
-                parsed_date = dateparser.parse(
-                    date_str,
-                    languages=['es'],
-                    settings={'DATE_ORDER': 'DMY'}
-                )
+            parsed_date = dateparser.parse(
+                date_str, 
+                languages=['es'],
+                settings={'DATE_ORDER': 'DMY'}
+            )
             
             return {
                 "title": self._safe_extract(soup, SELECTORS["title"]),
                 "content": content or "Contenido no disponible",
-                "date": parsed_date.date().isoformat() if parsed_date else None,
+                "date": parsed_date.date().isoformat() if parsed_date else "",
                 "url": url
             }
         except Exception as e:

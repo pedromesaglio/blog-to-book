@@ -10,9 +10,9 @@ class Article(Base):
     __tablename__ = 'articles'
     
     id = Column(Integer, primary_key=True)
-    title = Column(String(300), nullable=False)
+    title = Column(String(500), nullable=False)
     content = Column(Text, nullable=False)
-    url = Column(String(500), unique=True, nullable=False)
+    url = Column(String(2000), unique=True, nullable=False)
     publish_date = Column(DateTime)
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
@@ -26,32 +26,29 @@ class DatabaseManager:
     def save_article(self, article_data):
         session = self.Session()
         try:
-            # Manejo mejorado de fechas
             publish_date = None
             if article_data.get('date'):
                 try:
-                    if isinstance(article_data['date'], str):
-                        publish_date = datetime.fromisoformat(article_data['date'])
-                    else:
-                        publish_date = article_data['date']
-                except Exception as e:
-                    logger.warning(f"Error parseando fecha: {str(e)}")
+                    publish_date = datetime.fromisoformat(article_data['date'])
+                except (TypeError, ValueError):
+                    logger.warning(f"Formato de fecha inválido: {article_data['date']}")
             
             article = Article(
-                title=article_data['title'],
+                title=article_data['title'][:500],
                 content=article_data['content'],
-                url=article_data['url'],
+                url=article_data['url'][:2000],
                 publish_date=publish_date
             )
             session.add(article)
             session.commit()
+            return article
         except Exception as e:
             session.rollback()
-            raise e
+            logger.error(f"Error guardando artículo: {str(e)}")
+            raise
         finally:
             session.close()
     
-    # Los demás métodos se mantienen igual...
     def get_all_articles(self):
         session = self.Session()
         try:
