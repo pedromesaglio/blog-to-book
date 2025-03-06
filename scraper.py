@@ -7,6 +7,7 @@ import random
 from typing import List, Dict, Optional
 from config import BASE_URL, SELECTORS, MAX_PAGES
 from database import DatabaseManager
+import dateparser  # Nuevo import
 
 logger = logging.getLogger(__name__)
 
@@ -105,10 +106,19 @@ class BlogScraper:
                     date_str = element.text.strip()
                     break
             
+            # Parseo mejorado de fecha
+            parsed_date = None
+            if date_str:
+                parsed_date = dateparser.parse(
+                    date_str,
+                    languages=['es'],
+                    settings={'DATE_ORDER': 'DMY'}
+                )
+            
             return {
                 "title": self._safe_extract(soup, SELECTORS["title"]),
                 "content": content or "Contenido no disponible",
-                "date": date_str,
+                "date": parsed_date.date().isoformat() if parsed_date else None,
                 "url": url
             }
         except Exception as e:

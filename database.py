@@ -1,7 +1,9 @@
 from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime
 from sqlalchemy.orm import declarative_base, sessionmaker
 from datetime import datetime
+import logging
 
+logger = logging.getLogger(__name__)
 Base = declarative_base()
 
 class Article(Base):
@@ -24,11 +26,22 @@ class DatabaseManager:
     def save_article(self, article_data):
         session = self.Session()
         try:
+            # Manejo mejorado de fechas
+            publish_date = None
+            if article_data.get('date'):
+                try:
+                    if isinstance(article_data['date'], str):
+                        publish_date = datetime.fromisoformat(article_data['date'])
+                    else:
+                        publish_date = article_data['date']
+                except Exception as e:
+                    logger.warning(f"Error parseando fecha: {str(e)}")
+            
             article = Article(
                 title=article_data['title'],
                 content=article_data['content'],
                 url=article_data['url'],
-                publish_date=datetime.strptime(article_data['date'], '%Y-%m-%d') if article_data.get('date') else None
+                publish_date=publish_date
             )
             session.add(article)
             session.commit()
@@ -38,6 +51,7 @@ class DatabaseManager:
         finally:
             session.close()
     
+    # Los demás métodos se mantienen igual...
     def get_all_articles(self):
         session = self.Session()
         try:
