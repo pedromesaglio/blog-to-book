@@ -20,8 +20,7 @@ class PDFGenerator:
         styles = getSampleStyleSheet()
         cfg = PDF_CONFIG
         
-        # Convertir márgenes a puntos (1mm = 2.83465 puntos)
-        margin_left = cfg["page"]["margin"]["left"] * 2.83465
+        margin_left = cfg["page"]["margin"]["left"] * 2.83465  # mm to points
         margin_right = cfg["page"]["margin"]["right"] * 2.83465
         
         styles.add(ParagraphStyle(
@@ -105,4 +104,4 @@ class DOCXGenerator:
             style = styles.add_style("Quote", styles["Intense Quote"])
             font = style.font
             font.size = Pt(11)
-            font.color.rgb = 0x404040  # Gris oscuro
+            font.color.rgb = 0x404040

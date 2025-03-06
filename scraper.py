@@ -6,13 +6,14 @@ import time
 import random
 from typing import List, Dict, Optional
 from config import BASE_URL, SELECTORS, MAX_PAGES
+from database import DatabaseManager
 
 logger = logging.getLogger(__name__)
 
 class BlogScraper:
-    def __init__(self, delay_range: tuple = (1, 3)):
+    def __init__(self, db: DatabaseManager):
+        self.db = db
         self.session = requests.Session()
-        self.delay_range = delay_range
         self.session.headers.update({
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
             "Accept-Language": "es-ES,es;q=0.9"
@@ -20,17 +21,13 @@ class BlogScraper:
     
     def _get_soup(self, url: str) -> Optional[BeautifulSoup]:
         try:
-            self._apply_delay()
+            time.sleep(random.uniform(1, 3))
             response = self.session.get(url, timeout=15)
             response.raise_for_status()
             return BeautifulSoup(response.text, 'html.parser')
         except Exception as e:
             logger.error(f"Error en {url}: {type(e).__name__}")
             return None
-    
-    def _apply_delay(self):
-        if self.delay_range:
-            time.sleep(random.uniform(*self.delay_range))
     
     def get_all_article_links(self, max_articles: int = None) -> List[str]:
         all_links = []
@@ -82,7 +79,13 @@ class BlogScraper:
         return None
     
     def extract_articles(self, urls: List[str]) -> List[Dict]:
-        return [article for url in urls if (article := self._extract_article(url))]
+        articles = []
+        for url in urls:
+            if not self.db.article_exists(url):
+                if article := self._extract_article(url):
+                    self.db.save_article(article)
+                    articles.append(article)
+        return articles
     
     def _extract_article(self, url: str) -> Optional[Dict]:
         soup = self._get_soup(url)
@@ -96,10 +99,16 @@ class BlogScraper:
                     content = "\n".join([p.text.strip() for p in element.find_all("p")])
                     break
             
+            date_str = ""
+            for selector in SELECTORS["date"]:
+                if element := soup.select_one(selector):
+                    date_str = element.text.strip()
+                    break
+            
             return {
                 "title": self._safe_extract(soup, SELECTORS["title"]),
                 "content": content or "Contenido no disponible",
-                "date": self._safe_extract(soup, SELECTORS["date"]),
+                "date": date_str,
                 "url": url
             }
         except Exception as e:
