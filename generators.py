@@ -30,40 +30,53 @@ class PDFGenerator:
         return None
 
     def _create_styles(self):
+        cfg = PDF_CONFIG
         return {
-            'title': ParagraphStyle(
-                name='Title',
-                fontName=PDF_CONFIG["fonts"]["bold"],
-                fontSize=PDF_CONFIG["fonts"]["sizes"]["title"],
-                textColor=colors.HexColor(PDF_CONFIG["colors"]["primary"]),
-                spaceAfter=14,
-                alignment=1
+            'h1': ParagraphStyle(
+                name='Heading1',
+                fontName=cfg["fonts"]["heading"],
+                fontSize=cfg["fonts"]["sizes"]["h1"],
+                textColor=colors.HexColor(cfg["colors"]["primary"]),
+                leading=cfg["fonts"]["sizes"]["h1"] * 1.2,
+                spaceAfter=cfg["spacing"]["section"],
+                alignment=0
             ),
-            'date': ParagraphStyle(
-                name='Date',
-                fontName=PDF_CONFIG["fonts"]["italic"],
-                fontSize=PDF_CONFIG["fonts"]["sizes"]["subtitle"],
-                textColor=colors.HexColor(PDF_CONFIG["colors"]["secondary"]),
-                spaceAfter=10
+            'h2': ParagraphStyle(
+                name='Heading2',
+                fontName=cfg["fonts"]["heading"],
+                fontSize=cfg["fonts"]["sizes"]["h2"],
+                textColor=colors.HexColor(cfg["colors"]["primary"]),
+                spaceAfter=cfg["spacing"]["paragraph"]
             ),
-            'content': ParagraphStyle(
-                name='Content',
-                fontName=PDF_CONFIG["fonts"]["regular"],
-                fontSize=PDF_CONFIG["fonts"]["sizes"]["body"],
-                leading=PDF_CONFIG["fonts"]["sizes"]["body"] * 1.5,
-                textColor=colors.HexColor(PDF_CONFIG["colors"]["text"])
+            'meta': ParagraphStyle(
+                name='Meta',
+                fontName=cfg["fonts"]["accent"],
+                fontSize=cfg["fonts"]["sizes"]["meta"],
+                textColor=colors.HexColor(cfg["colors"]["secondary"]),
+                spaceAfter=cfg["spacing"]["paragraph"]
+            ),
+            'body': ParagraphStyle(
+                name='Body',
+                fontName=cfg["fonts"]["body"],
+                fontSize=cfg["fonts"]["sizes"]["body"],
+                textColor=colors.black,  # Texto siempre negro
+                leading=cfg["fonts"]["sizes"]["body"] * cfg["spacing"]["line_height"],
+                spaceAfter=cfg["spacing"]["paragraph"]
             )
         }
-
     def _header_footer(self, canvas, doc):
         canvas.saveState()
-        # Header
+        # Encabezado verde
+        canvas.setFillColor(colors.HexColor(PDF_CONFIG["colors"]["primary"]))
+        canvas.rect(0, A4[1] - 40, A4[0], 40, fill=1, stroke=0)
+        
         if self.logo:
-            self.logo.drawOn(canvas, 30*mm, A4[1] - 30*mm)
+            self.logo.drawOn(canvas, 35*mm, A4[1] - 35*mm)
         # Footer
-        footer_text = f"Página {doc.page} | {datetime.now().strftime('%d/%m/%Y')}"
-        canvas.setFont(PDF_CONFIG["fonts"]["regular"], PDF_CONFIG["fonts"]["sizes"]["footer"])
-        canvas.drawString(30*mm, 20*mm, footer_text)
+        canvas.setFont(PDF_CONFIG["fonts"]["body"], PDF_CONFIG["fonts"]["sizes"]["meta"])
+        canvas.setFillColor(colors.HexColor(PDF_CONFIG["colors"]["secondary"]))
+        footer_text = f"{PDF_CONFIG['branding']['website']} - Página {doc.page}"
+        canvas.drawCentredString(A4[0]/2, 15*mm, footer_text)
         canvas.restoreState()
 
     def generate(self):
@@ -78,25 +91,43 @@ class PDFGenerator:
             )
             
             elements = [
-                Paragraph("Catálogo de Artículos", self.styles['title']),
-                Spacer(1, 20)
+                Spacer(1, 20),
+                Paragraph("Blog Cultivo Loco", self.styles['h1']),
+                Table(
+                    [[""]],
+                    colWidths=["100%"],
+                    style=[
+                        ('LINEBELOW', (0,0), (-1,-1), 1, colors.HexColor(PDF_CONFIG["colors"]["border"]))
+                    ]
+                ),
+                Spacer(1, PDF_CONFIG["spacing"]["section"])
             ]
             
             for article in self.articles:
                 elements += [
-                    Paragraph(article["title"], self.styles['title']),
-                    Paragraph(f'Publicado el {article["date"]}', self.styles['date']),
-                    Spacer(1, 10),
-                    Paragraph(article["content"], self.styles['content']),
+                    Paragraph(article["title"], self.styles['h2']),
+                    Paragraph(f"Publicado el {article['date']}", self.styles['meta']),
+                    Spacer(1, 8),
+                    Paragraph(article["content"], self.styles['body']),
+                    self._create_divider(),
                     PageBreak()
                 ]
             
             doc.build(elements, onFirstPage=self._header_footer, onLaterPages=self._header_footer)
-            logger.info(f"PDF generado: {self.filename}")
+            logging.info(f"PDF generado: {self.filename}")
         
         except Exception as e:
-            logger.error(f"Error generando PDF: {str(e)}")
+            logging.error(f"Error generando PDF: {str(e)}")
             raise
+
+    def _create_divider(self):
+        return Table(
+            [[""]],
+            colWidths=["100%"],
+            style=[
+                ('LINEABOVE', (0,0), (-1,-1), 1, colors.HexColor(PDF_CONFIG["colors"]["border"]))
+            ]
+        )
 
 class DOCXGenerator:
     def __init__(self, articles: List[Dict], filename: str):
@@ -127,15 +158,54 @@ class DOCXGenerator:
             raise
     
     def _setup_styles(self, doc):
+        cfg = PDF_CONFIG
         styles = doc.styles
-        # Estilo título
-        title_style = styles['Heading 1']
-        title_style.font.name = PDF_CONFIG["fonts"]["bold"]
-        title_style.font.size = Pt(16)
-        title_style.font.color.rgb = RGBColor.from_string(PDF_CONFIG["colors"]["primary"][1:])
         
-        # Estilo fecha
-        quote_style = styles['Intense Quote']
-        quote_style.font.name = PDF_CONFIG["fonts"]["italic"]
-        quote_style.font.size = Pt(12)
-        quote_style.font.color.rgb = RGBColor.from_string(PDF_CONFIG["colors"]["secondary"][1:])
+        # Título principal
+        title_style = styles['Title']
+        title_style.font.name = 'Calibri'
+        title_style.font.size = Pt(cfg["fonts"]["sizes"]["h1"])
+        title_style.font.color.rgb = RGBColor.from_string(cfg["colors"]["primary"][1:])
+        
+        # Encabezado artículo
+        heading_style = styles['Heading1']
+        heading_style.font.name = 'Calibri'
+        heading_style.font.size = Pt(cfg["fonts"]["sizes"]["h2"])
+        heading_style.font.color.rgb = RGBColor.from_string(cfg["colors"]["primary"][1:])
+        
+        # Fecha
+        date_style = styles.add_style('CultivoDate', 4)
+        date_style.font.name = 'Calibri'
+        date_style.font.italic = True
+        date_style.font.size = Pt(cfg["fonts"]["sizes"]["meta"])
+        date_style.font.color.rgb = RGBColor.from_string(cfg["colors"]["secondary"][1:])
+        
+        # Cuerpo (texto negro)
+        body_style = styles['Normal']
+        body_style.font.name = 'Arial'
+        body_style.font.size = Pt(cfg["fonts"]["sizes"]["body"])
+        body_style.font.color.rgb = RGBColor(0, 0, 0)  # Negro puro
+    
+    def _add_cover_page(self, doc):
+        # Logo
+        if os.path.exists(PDF_CONFIG["branding"]["logo_path"]):
+            doc.add_picture(PDF_CONFIG["branding"]["logo_path"], width=Inches(2))
+        
+        # Título
+        title = doc.add_paragraph("Blog Cultivo Loco", style='Title')
+        title.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+        doc.add_page_break()
+    
+    def _add_article(self, doc, article):
+        # Título
+        doc.add_heading(article['title'], level=1)
+        
+        # Fecha
+        doc.add_paragraph(f"Publicado el {article['date']}", style='CultivoDate')
+        
+        # Contenido
+        content = doc.add_paragraph(article['content'])
+        content.alignment = WD_PARAGRAPH_ALIGNMENT.JUSTIFY
+        
+        # Divisor
+        doc.add_paragraph().add_run("―" * 50).color.rgb = RGBColor.from_string(PDF_CONFIG["colors"]["border"][1:])

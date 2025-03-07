@@ -1,4 +1,3 @@
-# Configuración mejorada para diseño profesional
 BASE_URL = "https://cultivoloco.com.ar/"
 OUTPUT_FILENAME = "libro_blog"
 MAX_PAGES = 20
@@ -30,38 +29,37 @@ PDF_CONFIG = {
     "page": {
         "size": "A4",
         "margin": {
-            "top": 40,
-            "bottom": 40,
-            "left": 30,
-            "right": 30
+            "top": 45,
+            "bottom": 45,
+            "left": 35,
+            "right": 35
         }
     },
     "fonts": {
-        "regular": "Helvetica",
-        "bold": "Helvetica-Bold",
-        "italic": "Helvetica-Oblique",
+        "heading": "Helvetica-Bold",
+        "body": "Helvetica",
+        "accent": "Helvetica-Oblique",
         "sizes": {
-            "title": 20,
-            "subtitle": 14,
-            "body": 11,
-            "header": 9,
-            "footer": 8
+            "h1": 22,
+            "h2": 18,
+            "body": 13,
+            "meta": 11
         }
     },
     "colors": {
-        "primary": "#2E5BFF",
-        "secondary": "#4A4A4A",
-        "accent": "#F5F6F7",
-        "text": "#2D3A4B"
+        "primary": "#3A7D44",    # Verde principal
+        "secondary": "#6B9F78",  # Verde secundario
+        "text": "#000000",       # Texto en negro
+        "border": "#8AB894",     # Borde verde
+        "background": "#F5FAF6"  # Fondo verde claro
     },
-    "styles": {
-        "line_height": 1.5,
-        "paragraph_spacing": 12,
-        "header_height": 25,
-        "footer_height": 15
+    "spacing": {
+        "line_height": 1.6,
+        "paragraph": 12,
+        "section": 25
     },
     "branding": {
         "logo_path": "logo.png",
-        "website": "cultivoloco.com.ar"
+        "website": "CultivoLoco.com.ar"
     }
 }
